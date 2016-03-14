@@ -53,8 +53,7 @@ class boolAlg (object):
 
             print("Function Result")
 
-        code = ""
-        code += "def function():\n"
+        code = "def function():\n"
         code += ("    ret = []\n")
         for item in self.var:
             code +=("    " + item + " = 0\n")
@@ -77,7 +76,7 @@ class boolAlg (object):
         exec("self.functionVal = function()")
         
         
-    def __eq__(self, obj):
+    def __eq__(self, obj): 
         if isinstance(obj, boolAlg):
             return self.functionVal == obj.functionVal
         else:
@@ -90,8 +89,3 @@ class boolAlg (object):
         else:
             print("Invalid comparison: <class 'boolAlg'> and " + str(type(obj)))
             return None
-
-test = boolAlg("AB+C", False)
-test2 = boolAlg("A+B+C", False)
-test3 = 12
-print(str(test != test2))
