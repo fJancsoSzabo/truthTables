@@ -12,7 +12,15 @@ from boolAlg import *
 # print(test)
 
 
-print(checkBracketParity("(())"))
-print(checkBracketParity("(((("))
-print(checkBracketParity("(()()ooooo)"))
-print(checkBracketParity("(A)(AB)((AB))"))
+#print(checkBracketParity("(())"))
+#print(checkBracketParity("(((("))
+#rint(checkBracketParity("(()()ooooo)"))
+#rint(checkBracketParity("(A)(AB)((AB))"))
+
+test = boolAlg("(A+B)'+CD", False)
+
+print("actual", test)
+
+test.analyzeTree()
+
+print((True or False ))
