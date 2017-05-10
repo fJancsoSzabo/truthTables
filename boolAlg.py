@@ -1,4 +1,4 @@
-# 
+#
 #   Boolean Algebra System
 #       - Main Code
 #
@@ -7,21 +7,22 @@
 
 from math import log
 from helper import *
+
 class boolAlg (object):
     def __init__(self, userInput, output):
-        # stores the expression given by the user 
+        # stores the expression given by the user
         self.input = userInput
         self.inputLen = len(userInput)
-        
+
         # initializes variables
         self.exp = ""
         self.var = []
         self.functionVal = []
         self.tree = Tree([])
-        
-        # Calls bracket parity function to make sure there is proper bracket nesting (reduces risk of exceptions)
+
+        # If all brackets make up a matching pair
         if checkBracketParity(self.input):
-            
+
             self.parse()
             self.calc()
             self.buildTree()
@@ -30,47 +31,63 @@ class boolAlg (object):
                 self.printTable()
         else:
             print("Error: there are mismatched brackets in your expression")
-        
-# Parses the input boolean expression into python syntax
+
+    # Transforms the input boolean string into a structure this code can use
     def parse(self):
-        unacc = ["+", ")", chr(39)]
+
         bracketNest = 0
+
         bracketOpenPos = []
+
+        # TODO: Change this to use enumerate
         for n in range(self.inputLen):
             if self.input[n] == "+":
                 self.exp += " or "
+
             elif self.input[n] == "(":
+                # Store where the bracket will be added in self.exp.  This is so that, if a "'" is found, we can add a not BEFORE the bracket
                 bracketOpenPos.append(len(self.exp))
                 bracketNest += 1
                 self.exp += "("
-            elif self.input[n] == chr(39):
-                if self.input[n-1] == ")":
-                    self.exp = self.exp[:bracketOpenPos[len(bracketOpenPos)-bracketNest]] + " not " + self.exp[bracketOpenPos[len(bracketOpenPos)-bracketNest]:]
-                    bracketNest -= 1
-                    if n+1 < self.inputLen and self.input[n+1] not in unacc:
-                        self.exp += " and "
-                else:
-                    self.exp = self.exp[:len(self.exp)-1] + " not " + self.exp[len(self.exp)-1]
-                    if n+1 < self.inputLen and self.input[n+1] not in unacc:
-                        self.exp += " and "
-            elif self.input[n] == ")":
-                if n+1 < self.inputLen and self.input[n+1] != chr(39):
-                    bracketNest -= 1
-                self.exp += ")"
-                if n+1 < self.inputLen:
-                    if self.input[n+1] not in unacc:
-                        self.exp += " and "
-            elif n + 1 < self.inputLen:
-                self.var += self.input[n]
-                self.exp += self.input[n]
-                if self.input[n+1] not in unacc:
-                    self.exp += " and "
+
             else:
-                self.var += self.input[n]
-                self.exp += self.input[n]
+                if self.input[n] == "'":
+                    split_index = 0
+
+                    # If this character is negating more than one character, then we have to find the corresponding opening bracket and insert the "not"
+                    if self.input[n-1] == ")":
+                        # Calculate the the index of the opening bracket
+                        split_index = bracketOpenPos[len(bracketOpenPos)-bracketNest]
+
+                        # Cut the current expression into two halves, the first one ending just before the opening bracket, the second one starting with the bracket
+                        bracketNest -= 1
+
+                    else:
+                        split_index = len(self.exp)-1
+
+                    first_half = self.exp[:split_index]
+                    second_half = self.exp[split_index:]
+
+
+                elif self.input[n] == ")":
+                    # Not sure why this is here
+                    if n != self.inputLen - 1 and self.input[n+1] != "'":
+                        bracketNest -= 1
+
+                    self.exp += ")"
+
+                else:
+                    # This character is a variable name or a space, add it.
+                    self.var += self.input[n]
+                    self.exp += self.input[n]
+
+                # If this is not the last character in the input, and adding an "and" wouldn't create invalid syntax, add an "and".
+                if n != self.inputLen - 1 and self.input[n+1] not in ["+", ")", "'"]:
+                    self.exp += " and "
+
         self.var = sorted(set(self.var))
 
-# Develops code for the creation of the truth table        
+    # Generates code for the creation of the truth table
     def calc(self):
         # if output:
             # for item in self.var:
@@ -103,9 +120,9 @@ class boolAlg (object):
 # prints the boolean expression used for the calculations
     def __repr__(self):
         return self.exp
-        
-        
-# prints the truth table for the object        
+
+
+# prints the truth table for the object
     def printTable(self):
         ret = ""
         for item in self.var:
@@ -124,14 +141,14 @@ class boolAlg (object):
         print(ret)
 
 # Returns whether two different boolean functions are equivalent
-    def __eq__(self, obj): 
+    def __eq__(self, obj):
         if isinstance(obj, boolAlg):
             return self.functionVal == obj.functionVal
         else:
             print("Invalid comparison: <class 'boolAlg'> and " + str(type(obj)))
             return None
 
-# A function that returns whether two different boolean functions are not equivalent            
+# A function that returns whether two different boolean functions are not equivalent
     def __ne__(self, obj):
         if isinstance(obj, boolAlg):
             return self.functionVal != obj.functionVal
@@ -139,7 +156,7 @@ class boolAlg (object):
             print("Invalid comparison: <class 'boolAlg'> and " + str(type(obj)))
             return None
 
-# This function derives a minterm expression for a function from its truth table            
+# This function derives a minterm expression for a function from its truth table
     def calculateExp(self):
         print("Please input values of the truth table one at a time.  Enter any other character to end the input")
         inp = "1"
@@ -198,8 +215,8 @@ class boolAlg (object):
                 n = self.buildTreeRecurse(self.tree.children[len(self.tree.children)-1], n + 1)
             n += 1
 
-# The recursive function that is called by the function designed to be general purpose (buildTree).  
-# Separate from the main function because their loops have different termination points            
+# The recursive function that is called by the function designed to be general purpose (buildTree).
+# Separate from the main function because their loops have different termination points
     def buildTreeRecurse(self, node, n):
         while self.exp[n] != ")":
             if self.exp[n] == "(":
@@ -229,7 +246,7 @@ class boolAlg (object):
         for child in node.children:
             if isinstance(child, Tree):
                 string += "(" + self.analyzeTree(child, False) + ") "
-            else: 
+            else:
                 string += child + " "
         if root:
             return boolAlg(string, False)
