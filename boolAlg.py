@@ -89,72 +89,74 @@ class boolAlg (object):
 
     # Generates code for the creation of the truth table
     def calc(self):
-        # if output:
-            # for item in self.var:
-                # print(item, end = "  ")
-
-            # print("Function Result")
 
         code = "def function():\n"
         code += ("    ret = []\n")
-        for item in self.var:
-            code +=("    " + item + " = 0\n")
-        code += "    binCount = 0\n    for item in range(" + str(2**len(self.var)) + "):\n"
+
+        for variable in self.var:
+            code +=("    " + variable + " = 0\n")
+
+        code += "    binCount = 0\n"
+        code += "    for item in range(" + str(2**len(self.var)) + "):\n"
+
         binCountBasis = 0b1
+
+        # TODO: Change this to use enumerate
+        # TODO: Explain the weird ordering here
         for n in reversed(range(len(self.var))):
-            code += ("        " + self.var[n] + " = bool(binCount & " + str(bin(binCountBasis)) + ")\n")
+            code += ("        " + self.var[n] + " = bool(binCount & " + str(binCountBasis) + ")\n")
             binCountBasis <<= 1
-        # if output:
-            # for n in range(len(self.var)):
-                # code += ("        print(int(" + self.var[n] + "), end = " + chr(34) + chr(32) + chr(32) + chr(34) + ")\n")
+
         code += "        a = int(" + self.exp + ")\n"
-        #code += "        print(a)\n"
         code += "        ret.append(a)\n"
-        # if output:
-            # code += ("        print(a)\n")
+
         code += ("        binCount += 1\n")
         code += ("    return ret\n")
         exec(code)
-        exec("self.functionVal = function()")
 
-# prints the boolean expression used for the calculations
+        self.functionVal = function()
+        # ^ Formerly: exec("self.functionVal = function()")
+
+    # prints the boolean expression used for the calculations
     def __repr__(self):
         return self.exp
 
 
-# prints the truth table for the object
+    # prints the truth table for the object
     def printTable(self):
-        ret = ""
+        result = ""
         for item in self.var:
-            ret += item + "  "
+            result += item + "  "
 
-        ret += "Function Result\n"
+        result += "Function Result\n"
+
+        permutations = 2**len(self.var)
 
         binCount = 0
-        for n in range(2**len(self.var)):
-            innerCount = 2**(len(self.var) - 1)
+        for n in range(permutations):
+            innerCount = permutations >> 1
+
             for i in reversed(range(len(self.var))):
-                ret += str(int(bool(binCount & innerCount))) + "  "
+                result += str(int(bool(binCount & innerCount))) + "  "
                 innerCount >>= 1
-            ret += str(self.functionVal[binCount]) + "\n"
+
+            result += str(self.functionVal[binCount]) + "\n"
             binCount += 1
-        print(ret)
+        print(result)
 
-# Returns whether two different boolean functions are equivalent
+    # Returns whether two different boolean functions are equivalent
     def __eq__(self, obj):
-        if isinstance(obj, boolAlg):
-            return self.functionVal == obj.functionVal
-        else:
-            print("Invalid comparison: <class 'boolAlg'> and " + str(type(obj)))
-            return None
+        if not isinstance(obj, boolAlg):
+            return NotImplemented
 
-# A function that returns whether two different boolean functions are not equivalent
+        return self.functionVal == obj.functionVal
+
+    # A function that returns whether two different boolean functions are not equivalent
     def __ne__(self, obj):
-        if isinstance(obj, boolAlg):
-            return self.functionVal != obj.functionVal
-        else:
-            print("Invalid comparison: <class 'boolAlg'> and " + str(type(obj)))
-            return None
+        if not isinstance(obj, boolAlg):
+            return NotImplemented
+
+        return self.functionVal != obj.functionVal
 
 # This function derives a minterm expression for a function from its truth table
     def calculateExp(self):
