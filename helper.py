@@ -37,11 +37,11 @@ def checkBracketParity(string):
         elif char == ")":
             nesting_count -= 1
 
-        if nesting_count < 0
-            return false
+        if nesting_count < 0:
+            return False
 
     return nesting_count == 0
-    
+
 
 # Analyzes whether a number is a power of two without using log functions (no floats)        
 def powerOfTwo(num):
