@@ -9,7 +9,7 @@ from math import log
 from helper import *
 
 class boolAlg (object):
-    def __init__(self, userInput, output):
+    def __init__(self, userInput):
         # stores the expression given by the user
         self.input = userInput
         self.inputLen = len(userInput)
@@ -26,9 +26,6 @@ class boolAlg (object):
             self.parse()
             self.calc()
             self.buildTree()
-            if output:
-                print(self.__repr__())
-                self.printTable()
         else:
             print("Error: there are mismatched brackets in your expression")
 
@@ -249,6 +246,6 @@ class boolAlg (object):
             else:
                 string += child + " "
         if root:
-            return boolAlg(string, False)
+            return boolAlg(string)
         else:
             return string

@@ -8,4 +8,4 @@ from boolAlg import *
 
 #expr = boolAlg(userIn, printIt)
 
-test = boolAlg("(A+D)(BD)'+(AC+D')'", True)
+test = boolAlg("(A+D)(BD)'+(AC+D')'")
