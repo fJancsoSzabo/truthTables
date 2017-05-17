@@ -54,6 +54,10 @@ class boolAlg (object):
                         # Calculate the the index of the opening bracket
                         split_index = bracketOpenPos[len(bracketOpenPos)-bracketNest]
 
+                        # Adding in a " not " will shift all subsequent bracket positions.  Account for this.
+                        for position in range(len(bracketOpenPos)-bracketNest, len(bracketOpenPos)):
+                            bracketOpenPos[position] += len(" not ")
+
                         # Cut the current expression into two halves, the first one ending just before the opening bracket, the second one starting with the bracket
                         bracketNest -= 1
 
