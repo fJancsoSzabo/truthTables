@@ -158,43 +158,41 @@ class boolAlg (object):
 
         return self.functionVal != obj.functionVal
 
-# This function derives a minterm expression for a function from its truth table
-    def calculateExp(self):
-        print("Please input values of the truth table one at a time.  Enter any other character to end the input")
-        inp = "1"
-        tempVal = []
-        while inp == "1" or inp == "0":
-            inp = input()
-            if inp == "1" or inp == "0":
-                tempVal.append(int(inp))
-        if not powerOfTwo(len(tempVal)):
-            print("Invalid length of truth table.")
-            return None
-        tempVar = []
-        output = []
-        varCount = int(log(len(tempVal), 2))
-        maxVal = pow(2, varCount)
-        print("Please input, one at a time, the literals you want your expression in.")
-        for n in range(varCount):
-            tempVar.append(input())
-        tempVar = sorted(tempVar)[::-1]
-        binCount = 0
-        while binCount < maxVal:
-            if tempVal[binCount] == 1:
-                innerCount = 1
-                counter = 1
-                while counter <= varCount:
-                    if innerCount == 1:
-                        output.append(tempVar[counter - 1])
-                    else:
-                        output[len(output) - 1] += tempVar[counter - 1]
-                    if not bool(innerCount & binCount):
-                        output[len(output) - 1] += "'"
-                    counter += 1
-                    innerCount <<= 1
-            binCount += 1
-        ret = boolAlg("+".join(output), False)
-        return ret
+    # This function derives a minterm expression for a function from its truth table
+    @staticmethod
+    def calculateExp(self, values, literals):
+        # If the length of the input isn't a power of two, unsure how to handle this?
+        if not powerOfTwo(len(values)):
+            raise NotImplementedError
+
+        # Calculate the number of values we're expecting, based on the number of literals provided
+        maxVal = pow(2, len(literals))
+
+        # if the number of values provided differs from the expectation, it's an error
+        if len(values) != maxVal:
+            raise Exception
+
+        literals.sort(reverse=True)
+
+        minterm_list = []
+
+        for count in range(maxVal):
+            # If this result in the truth table is false, we don't need to add a min term.  Skip to the next result
+            if values[count] != 1:
+                continue
+
+            minterm = ""
+            for key, literal in enumerate(literals):
+
+                minterm += literal
+
+                # If the current bit is 0 for the current literal (e.g. 0b110 and the literals are A, B and C), then invert that literal in this term (add a "'" to "ABC")
+                if (1 << key) & count == 0:
+                    minterm += "'"
+
+            minterm_list.append(minterm)
+
+        return "+".join(minterm_list)
 
 # Function that builds the tree by calling the recursive function.  Nests things based on brackets
     def buildTree(self):

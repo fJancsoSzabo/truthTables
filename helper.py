@@ -53,9 +53,5 @@ def checkBracketParity(string):
 
 # Analyzes whether a number is a power of two without using log functions (no floats)        
 def powerOfTwo(num):
-    power = 2
-    while power <= num:
-        if power == num:
-            return True
-        power <<= 1
-    return False
+    return num != 0 and ((num & (num - 1)) == 0)
+
