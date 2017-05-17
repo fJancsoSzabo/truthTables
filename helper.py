@@ -2,9 +2,6 @@
 #   Boolean Algebra System
 #       - Helper Functions and Classes
 #
-#   Scripted by Felix Jancso-Szabo (2016)
-#
-
 
 # Tree data structure used to express the boolean algebra expressions for simplification
 class Tree (object):
@@ -46,4 +43,3 @@ def checkBracketParity(string):
 # Analyzes whether a number is a power of two without using log functions (no floats)        
 def powerOfTwo(num):
     return num != 0 and ((num & (num - 1)) == 0)
-

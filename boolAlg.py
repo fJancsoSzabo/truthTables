@@ -2,8 +2,6 @@
 #   Boolean Algebra System
 #       - Main Code
 #
-#   Scripted by Felix Jancso-Szabo (2016)
-#
 
 from math import log
 from helper import *
@@ -113,9 +111,11 @@ class boolAlg (object):
 
         code += ("        binCount += 1\n")
         code += ("    return ret\n")
+
         exec(code)
 
         self.functionVal = function()
+
         # ^ Formerly: exec("self.functionVal = function()")
 
     # prints the boolean expression used for the calculations

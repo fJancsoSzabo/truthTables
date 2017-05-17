@@ -30,5 +30,9 @@ class TestBoolAlgParser(unittest.TestCase):
         self.assertEquals("(A or D) and not (B and D) or not (A and C or not D)", testing.exp)
         # "(A+D)(BD)'+(AC+D')'"
 
+    def test_2(self):
+        testing = boolAlg("A+(B(C+(D(E+(F)')')')')'")
+        self.assertEquals("A or not (B and not (C or not (D and not (E or not (F)))))", testing.exp)
+
 if __name__ == '__main__':
     unittest.main()
