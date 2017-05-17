@@ -65,6 +65,7 @@ class boolAlg (object):
                     first_half = self.exp[:split_index]
                     second_half = self.exp[split_index:]
 
+                    self.exp = first_half + " not " + second_half
 
                 elif self.input[n] == ")":
                     # Not sure why this is here
@@ -81,6 +82,9 @@ class boolAlg (object):
                 # If this is not the last character in the input, and adding an "and" wouldn't create invalid syntax, add an "and".
                 if n != self.inputLen - 1 and self.input[n+1] not in ["+", ")", "'"]:
                     self.exp += " and "
+
+        # Replace any groups of spaces with one space
+        self.exp = ' '.join(self.exp.split())
 
         self.var = sorted(set(self.var))
 
