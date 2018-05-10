@@ -1,181 +1,203 @@
-# 
+#
 #   Boolean Algebra System
 #       - Main Code
-#
-#   Scripted by Felix Jancso-Szabo (2016)
 #
 
 from math import log
 from helper import *
+
 class boolAlg (object):
-    def __init__(self, userInput, output):
-        # stores the expression given by the user 
+    def __init__(self, userInput):
+        # stores the expression given by the user
         self.input = userInput
         self.inputLen = len(userInput)
-        
+
         # initializes variables
         self.exp = ""
         self.var = []
         self.functionVal = []
         self.tree = Tree([])
-        
-        # Calls bracket parity function to make sure there is proper bracket nesting (reduces risk of exceptions)
+
+        # If all brackets make up a matching pair
         if checkBracketParity(self.input):
-            
+
             self.parse()
             self.calc()
             self.buildTree()
-            if output:
-                print(self.__repr__())
-                self.printTable()
         else:
             print("Error: there are mismatched brackets in your expression")
-        
-# Parses the input boolean expression into python syntax
+
+    # Transforms the input boolean string into a structure this code can use
     def parse(self):
-        unacc = ["+", ")", chr(39)]
+
         bracketNest = 0
+
         bracketOpenPos = []
+
+        # TODO: Change this to use enumerate
         for n in range(self.inputLen):
             if self.input[n] == "+":
                 self.exp += " or "
+
             elif self.input[n] == "(":
+                # Store where the bracket will be added in self.exp.  This is so that, if a "'" is found, we can add a not BEFORE the bracket
                 bracketOpenPos.append(len(self.exp))
                 bracketNest += 1
                 self.exp += "("
-            elif self.input[n] == chr(39):
-                if self.input[n-1] == ")":
-                    self.exp = self.exp[:bracketOpenPos[len(bracketOpenPos)-bracketNest]] + " not " + self.exp[bracketOpenPos[len(bracketOpenPos)-bracketNest]:]
-                    bracketNest -= 1
-                    if n+1 < self.inputLen and self.input[n+1] not in unacc:
-                        self.exp += " and "
-                else:
-                    self.exp = self.exp[:len(self.exp)-1] + " not " + self.exp[len(self.exp)-1]
-                    if n+1 < self.inputLen and self.input[n+1] not in unacc:
-                        self.exp += " and "
-            elif self.input[n] == ")":
-                if n+1 < self.inputLen and self.input[n+1] != chr(39):
-                    bracketNest -= 1
-                self.exp += ")"
-                if n+1 < self.inputLen:
-                    if self.input[n+1] not in unacc:
-                        self.exp += " and "
-            elif n + 1 < self.inputLen:
-                self.var += self.input[n]
-                self.exp += self.input[n]
-                if self.input[n+1] not in unacc:
-                    self.exp += " and "
+
             else:
-                self.var += self.input[n]
-                self.exp += self.input[n]
+                if self.input[n] == "'":
+                    split_index = 0
+
+                    # If this character is negating more than one character, then we have to find the corresponding opening bracket and insert the "not"
+                    if self.input[n-1] == ")":
+                        # Calculate the the index of the opening bracket
+                        split_index = bracketOpenPos[len(bracketOpenPos)-bracketNest]
+
+                        # Adding in a " not " will shift all subsequent bracket positions.  Account for this.
+                        for position in range(len(bracketOpenPos)-bracketNest, len(bracketOpenPos)):
+                            bracketOpenPos[position] += len(" not ")
+
+                        # Cut the current expression into two halves, the first one ending just before the opening bracket, the second one starting with the bracket
+                        bracketNest -= 1
+
+                    else:
+                        split_index = len(self.exp)-1
+
+                    first_half = self.exp[:split_index]
+                    second_half = self.exp[split_index:]
+
+                    self.exp = first_half + " not " + second_half
+
+                elif self.input[n] == ")":
+                    # Not sure why this is here
+                    if n != self.inputLen - 1 and self.input[n+1] != "'":
+                        bracketNest -= 1
+
+                    self.exp += ")"
+
+                else:
+                    # This character is a variable name or a space, add it.
+                    self.var += self.input[n]
+                    self.exp += self.input[n]
+
+                # If this is not the last character in the input, and adding an "and" wouldn't create invalid syntax, add an "and".
+                if n != self.inputLen - 1 and self.input[n+1] not in ["+", ")", "'"]:
+                    self.exp += " and "
+
+        # Replace any groups of spaces with one space
+        self.exp = ' '.join(self.exp.split())
+
         self.var = sorted(set(self.var))
 
-# Develops code for the creation of the truth table        
+    # Generates code for the creation of the truth table
     def calc(self):
-        # if output:
-            # for item in self.var:
-                # print(item, end = "  ")
-
-            # print("Function Result")
 
         code = "def function():\n"
         code += ("    ret = []\n")
-        for item in self.var:
-            code +=("    " + item + " = 0\n")
-        code += "    binCount = 0\n    for item in range(" + str(2**len(self.var)) + "):\n"
+
+        for variable in self.var:
+            code +=("    " + variable + " = 0\n")
+
+        code += "    binCount = 0\n"
+        code += "    for item in range(" + str(2**len(self.var)) + "):\n"
+
         binCountBasis = 0b1
+
+        # TODO: Change this to use enumerate
+        # TODO: Explain the weird ordering here
         for n in reversed(range(len(self.var))):
-            code += ("        " + self.var[n] + " = bool(binCount & " + str(bin(binCountBasis)) + ")\n")
+            code += ("        " + self.var[n] + " = bool(binCount & " + str(binCountBasis) + ")\n")
             binCountBasis <<= 1
-        # if output:
-            # for n in range(len(self.var)):
-                # code += ("        print(int(" + self.var[n] + "), end = " + chr(34) + chr(32) + chr(32) + chr(34) + ")\n")
+
         code += "        a = int(" + self.exp + ")\n"
-        #code += "        print(a)\n"
         code += "        ret.append(a)\n"
-        # if output:
-            # code += ("        print(a)\n")
+
         code += ("        binCount += 1\n")
         code += ("    return ret\n")
-        exec(code)
-        exec("self.functionVal = function()")
 
-# prints the boolean expression used for the calculations
+        exec(code)
+
+        self.functionVal = function()
+
+        # ^ Formerly: exec("self.functionVal = function()")
+
+    # prints the boolean expression used for the calculations
     def __repr__(self):
         return self.exp
-        
-        
-# prints the truth table for the object        
+
+
+    # prints the truth table for the object
     def printTable(self):
-        ret = ""
+        result = ""
         for item in self.var:
-            ret += item + "  "
+            result += item + "  "
 
-        ret += "Function Result\n"
+        result += "Function Result\n"
+
+        permutations = 2**len(self.var)
 
         binCount = 0
-        for n in range(2**len(self.var)):
-            innerCount = 2**(len(self.var) - 1)
+        for n in range(permutations):
+            innerCount = permutations >> 1
+
             for i in reversed(range(len(self.var))):
-                ret += str(int(bool(binCount & innerCount))) + "  "
+                result += str(int(bool(binCount & innerCount))) + "  "
                 innerCount >>= 1
-            ret += str(self.functionVal[binCount]) + "\n"
+
+            result += str(self.functionVal[binCount]) + "\n"
             binCount += 1
-        print(ret)
+        print(result)
 
-# Returns whether two different boolean functions are equivalent
-    def __eq__(self, obj): 
-        if isinstance(obj, boolAlg):
-            return self.functionVal == obj.functionVal
-        else:
-            print("Invalid comparison: <class 'boolAlg'> and " + str(type(obj)))
-            return None
+    # Returns whether two different boolean functions are equivalent
+    def __eq__(self, obj):
+        if not isinstance(obj, boolAlg):
+            return NotImplemented
 
-# A function that returns whether two different boolean functions are not equivalent            
+        return self.functionVal == obj.functionVal
+
+    # A function that returns whether two different boolean functions are not equivalent
     def __ne__(self, obj):
-        if isinstance(obj, boolAlg):
-            return self.functionVal != obj.functionVal
-        else:
-            print("Invalid comparison: <class 'boolAlg'> and " + str(type(obj)))
-            return None
+        if not isinstance(obj, boolAlg):
+            return NotImplemented
 
-# This function derives a minterm expression for a function from its truth table            
-    def calculateExp(self):
-        print("Please input values of the truth table one at a time.  Enter any other character to end the input")
-        inp = "1"
-        tempVal = []
-        while inp == "1" or inp == "0":
-            inp = input()
-            if inp == "1" or inp == "0":
-                tempVal.append(int(inp))
-        if not powerOfTwo(len(tempVal)):
-            print("Invalid length of truth table.")
-            return None
-        tempVar = []
-        output = []
-        varCount = int(log(len(tempVal), 2))
-        maxVal = pow(2, varCount)
-        print("Please input, one at a time, the literals you want your expression in.")
-        for n in range(varCount):
-            tempVar.append(input())
-        tempVar = sorted(tempVar)[::-1]
-        binCount = 0
-        while binCount < maxVal:
-            if tempVal[binCount] == 1:
-                innerCount = 1
-                counter = 1
-                while counter <= varCount:
-                    if innerCount == 1:
-                        output.append(tempVar[counter - 1])
-                    else:
-                        output[len(output) - 1] += tempVar[counter - 1]
-                    if not bool(innerCount & binCount):
-                        output[len(output) - 1] += "'"
-                    counter += 1
-                    innerCount <<= 1
-            binCount += 1
-        ret = boolAlg("+".join(output), False)
-        return ret
+        return self.functionVal != obj.functionVal
+
+    # This function derives a minterm expression for a function from its truth table
+    @staticmethod
+    def calculateExp(self, values, literals):
+        # If the length of the input isn't a power of two, unsure how to handle this?
+        if not powerOfTwo(len(values)):
+            raise NotImplementedError
+
+        # Calculate the number of values we're expecting, based on the number of literals provided
+        maxVal = pow(2, len(literals))
+
+        # if the number of values provided differs from the expectation, it's an error
+        if len(values) != maxVal:
+            raise Exception
+
+        literals.sort(reverse=True)
+
+        minterm_list = []
+
+        for count in range(maxVal):
+            # If this result in the truth table is false, we don't need to add a min term.  Skip to the next result
+            if values[count] != 1:
+                continue
+
+            minterm = ""
+            for key, literal in enumerate(literals):
+
+                minterm += literal
+
+                # If the current bit is 0 for the current literal (e.g. 0b110 and the literals are A, B and C), then invert that literal in this term (add a "'" to "ABC")
+                if (1 << key) & count == 0:
+                    minterm += "'"
+
+            minterm_list.append(minterm)
+
+        return "+".join(minterm_list)
 
 # Function that builds the tree by calling the recursive function.  Nests things based on brackets
     def buildTree(self):
@@ -198,8 +220,8 @@ class boolAlg (object):
                 n = self.buildTreeRecurse(self.tree.children[len(self.tree.children)-1], n + 1)
             n += 1
 
-# The recursive function that is called by the function designed to be general purpose (buildTree).  
-# Separate from the main function because their loops have different termination points            
+# The recursive function that is called by the function designed to be general purpose (buildTree).
+# Separate from the main function because their loops have different termination points
     def buildTreeRecurse(self, node, n):
         while self.exp[n] != ")":
             if self.exp[n] == "(":
@@ -229,9 +251,9 @@ class boolAlg (object):
         for child in node.children:
             if isinstance(child, Tree):
                 string += "(" + self.analyzeTree(child, False) + ") "
-            else: 
+            else:
                 string += child + " "
         if root:
-            return boolAlg(string, False)
+            return boolAlg(string)
         else:
             return string
